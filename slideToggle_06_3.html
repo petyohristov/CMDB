@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>slideToggle demo</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <link rel="stylesheet" type="text/css" href="cmdb.css">
+
+    <script>
+        var hlevel = 0,
+            level = 0,
+            id = 0,
+            exec = 0,
+            count = 0;
+
+        var selectedCIs = [];
+
+        jQuery(document).ready(function($) {
+
+            $('.live-search-box').on('keyup', function() {
+
+                var searchTerm = $(this).val().toLowerCase();
+
+                $('.CI').each(function() {
+
+                    if ($(this).filter('[data-search-term *= ' + searchTerm + ']').length > 0 || searchTerm.length < 1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+
+                });
+            });
+
+        });
+
+        function toggleDiv(tag_id) {
+
+            $("#" + tag_id).slideToggle();
+            $("#atrributes").slideToggle();
+        }
+
+        function toggleSelected_env(tag) {
+            $(tag).addClass('selected_env').siblings().removeClass('selected_env');
+            level = parseInt($(tag).parent().parent().parent().attr('id').split("_")[1]);
+
+            manager($(tag).hasClass("selected_env"), $(tag).attr('ci-number'), $(tag).attr('ci-typeid'), level);
+
+            //console.log($('.environment > table > tbody > tr.selected_env').attr("ID"));
+        };
+
+        function toggleSelected(tag) {
+            var pickedCI = $(tag).parent();
+            level = parseInt($(pickedCI).parent().parent().attr('id').split("_")[1]);
+
+            //console.log(selectedCIs[level]);
+            if (typeof selectedCIs[level] != 'undefined') $("#" + selectedCIs[level][0] + "_attr_info").slideUp();
+
+            $(pickedCI).toggleClass('selected').siblings().removeClass("selected").addClass("transperen");
+
+
+
+            if ($(pickedCI).hasClass("selected")) {
+                $("#ADD_CI_LEVEL_" + level).slideUp();
+                $("#" + pickedCI.attr('id') + "_attr_info").slideDown();
+
+                $(pickedCI).removeClass("transperen");
+            } else {
+                $("#ADD_CI_LEVEL_" + level).slideDown();
+                $("#" + pickedCI.attr('id') + "_attr_info").slideUp();
+
+                $(pickedCI).siblings().removeClass("transperen")
+            };
+
+            //console.log("pickedCI is ", pickedCI, " and level is ", level);
+
+
+            manager($(pickedCI).hasClass("selected"), $(pickedCI).attr('ci-number'), $(pickedCI).attr('ci-typeid'), level, $(pickedCI).attr('data-search-term'));
+
+
+        };
+
+        function manager(isselected, ci_number, ci_typeid, level, ci_name) {
+
+            var colsForExecution = hlevel - level;
+            var wait = 100;
+
+            //console.log(hlevel, " ", level, " ", colsForExecution);
+
+            if (level < hlevel) {
+                for (id = hlevel; id >= level + 1; id--) {
+                    $("#Level_" + id).delay(200 * (hlevel - id)).slideUp(500, function() {
+                        $(this).remove();
+                    });
+
+                    //console.log("Removed CI ", selectedCIs[id - 1]);
+
+                    $("#ID" + selectedCIs[id - 1][0]).delay(200 * (hlevel - id)).slideUp(500, function() {
+                        $(this).remove();
+                    });
+                }
+                hlevel = level;
+                selectedCIs.splice(hlevel, colsForExecution);
+            }
+
+            if (isselected) {
+                ((colsForExecution) == 0) ? wait = 0: wait = 200 * colsForExecution + 510;
+                //console.log("colsForExecution=", colsForExecution, " wait=", wait);
+                setTimeout(function() {
+                    add_col();
+                }, wait);
+            };
+
+            //console.log(selectedCIs);
+
+            function add_col() {
+
+
+                hlevel++;
+
+                var CI = ci_number;
+
+                selectedCIs.push([ci_number, $("#" + CI).attr("data-search-term")]);
+
+                //$("#atrributes").append($("#" + CI).attr("data-search-term") + ">");
+                var path = "";
+
+                if (typeof selectedCIs != 'undefined')
+                    for (var i = 0; i < selectedCIs.length; i++) {
+                        path += " | " + selectedCIs[i][1];
+                    }
+                $("#atrributes").text(path);
+                //console.log(path);
+
+
+
+                GetChildrenOfCI(ci_number, ci_typeid, hlevel);
+
+
+
+                return true;
+            };
+
+        }
+
+        function GetChildrenOfCI(parent, ci_tipeid = '0', level = 0) {
+            $.ajax({
+                type: 'POST',
+                url: "http://localhost:81/respdata1.aspx/GetChildrenOfCI",
+                data: '{CI_No: "' + parent + '"}',
+                cache: false,
+                timeout: 10000,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                error: function(xhr, status, error) {
+                    var err = eval("(" + xhr.responseText + ")");
+                    alert(err.Message);
+                },
+                success: function(repo) {
+                    var newCI;
+                    var response = repo.d;
+
+                    //console.log("CI_TipeID of ", parent, " is ", ci_tipeid, " and hlevel is ", hlevel)
+
+                    if (response.length > 0) {
+                        if (level == 0) {
+                            section = 'root_CIs';
+                        } else {
+                            switch (ci_tipeid) {
+                                case '3':
+                                    section = "Level_" + level;
+                                    $("#" + parent).append("<div class='environment' id='Level_" + level + "' style='display: none;'> <table> <thead> <tr> <th>ENVIRONMENTS</th> </tr> </thead> <tbody> </tbody> <tfoot> <tr> <td>Add New Environment</td> </tr> </tfoot> </table> </div>");
+                                    break;
+                                default:
+                                    section = "Level_" + level + "_CIs";
+                                    newCI = "<div id='Level_" + level + "' class='colomn' style='display: none'><div id='" + section + "' class='CIs'></div></div>";
+
+                                    $("#map").append(newCI);
+                            };
+                        };
+
+                        for (var i = 0; i < response.length; i++) {
+                            var child = response[i].Child;
+                            var child_name = response[i].ChildName;
+                            var CIType = response[i].CIType;
+                            var newTagID = child_name.replace(/ /g, "_");
+
+                            switch (ci_tipeid) {
+                                case '3':
+                                    newCI = "<tr id='" + child + "'  onclick='toggleSelected_env(this)' title='" + child + "'><td>" + child_name + "</td></tr>";
+                                    $("#" + section).find('table tbody').append(newCI);
+                                    //console.log(section);
+                                    $('#' + child).attr('data-search-term', child_name);
+                                    $('#' + child).attr('ci-number', child);
+                                    $('#' + child).attr('ci-typeid', CIType);
+                                    break;
+                                default:
+                                    newCI = "<div class='CI' id='" + child + "'><div class='CI_name' onclick='toggleSelected(this)' title='" + child + "'>" + child_name + "</div>";
+                                    newCI += "<div id='" + child + "_attr_info' class='CI_Info'><h1>Info</h1></div>"
+                                    newCI += "</div>";
+                                    $("#" + section).append(newCI);
+                                    $('#' + child).attr('data-search-term', child_name);
+                                    $('#' + child).attr('ci-number', child);
+                                    $('#' + child).attr('ci-typeid', CIType);
+                                    if (level > 0) $('#' + child).addClass('attrib_4');
+                            }
+
+
+                        };
+
+                        $("#Level_" + level).slideDown();
+                    };
+                }
+            });
+            return 0;
+        }
+
+        GetChildrenOfCI('CI000154');
+    </script>
+</head>
+
+<body>
+    <div id="container" class="container">
+        <div class="map_header" onclick='toggleDiv("map")'>CONFIGURATION ITEMS</div>
+        <div id="atrributes" class="inner" style="display: none;" onclick='toggleDiv("map")'>
+        </div>
+        <div id="map" class="inner" style=" z-index: -1;">
+            <div id="Root_0" class="colomn">
+                <div id="root_CIs" class="CIs"></div>
+            </div>
+        </div>
+        <div id="show" class="inner" onclick='toggleDiv("map")'></div>
+    </div>
+    <footer class="footer">
+        Footer
+    </footer>
+
+
+
+</body>
