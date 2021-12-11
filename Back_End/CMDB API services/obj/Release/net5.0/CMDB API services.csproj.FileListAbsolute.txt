@@ -1,0 +1,41 @@
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\appsettings.Development.json
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\appsettings.json
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\CMDB API services.exe
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\CMDB API services.deps.json
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\CMDB API services.runtimeconfig.json
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\CMDB API services.runtimeconfig.dev.json
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\CMDB API services.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\ref\CMDB API services.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\CMDB API services.pdb
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\Microsoft.OpenApi.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\Swashbuckle.AspNetCore.Swagger.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\System.Configuration.ConfigurationManager.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\System.Data.SqlClient.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\System.Security.Cryptography.ProtectedData.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\runtimes\win-arm64\native\sni.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\runtimes\win-x64\native\sni.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\runtimes\win-x86\native\sni.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\runtimes\win\lib\netstandard2.0\System.Security.Cryptography.ProtectedData.dll
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.csproj.AssemblyReference.cache
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.GeneratedMSBuildEditorConfig.editorconfig
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.AssemblyInfoInputs.cache
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.AssemblyInfo.cs
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.csproj.CoreCompileInputs.cache
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.MvcApplicationPartsAssemblyInfo.cs
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.MvcApplicationPartsAssemblyInfo.cache
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\staticwebassets\CMDB API services.StaticWebAssets.Manifest.cache
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\staticwebassets\CMDB API services.StaticWebAssets.xml
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\scopedcss\bundle\CMDB API services.styles.css
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.RazorTargetAssemblyInfo.cache
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.csproj.CopyComplete
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.dll
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\ref\CMDB API services.dll
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.pdb
+D:\Projects\Web side\WebServices\CMDB API services\obj\Release\net5.0\CMDB API services.genruntimeconfig.cache
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\Microsoft.Extensions.Hosting.WindowsServices.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\System.ServiceProcess.ServiceController.dll
+D:\Projects\Web side\WebServices\CMDB API services\bin\Release\net5.0\runtimes\win\lib\netstandard2.0\System.ServiceProcess.ServiceController.dll

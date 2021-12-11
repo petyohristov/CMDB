@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>CMDB UI</title>
+    
+    <link rel="stylesheet" type="text/css" href="cmdb.css">
+    <link rel="stylesheet" type="text/css" href="divcss.css">
+    <link rel="stylesheet" type="text/css" href="mask.css">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="environment.js"></script>
+    <script>
+        var hlevel = 0,
+            level = 0,
+            id = 0,
+            exec = 0,
+            count = 0;
+
+        var selectedCIs = [];
+
+        jQuery(document).ready(function($) {
+
+            $('.live-search-box').on('keyup', function() {
+
+                var searchTerm = $(this).val().toLowerCase();
+
+                $('.CI').each(function() {
+
+                    if ($(this).filter('[data-search-term *= ' + searchTerm + ']').length > 0 || searchTerm.length < 1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+
+                });
+            });
+
+        });
+
+        function toggleDiv(tag_id) {
+            $("#" + tag_id).slideToggle();
+            $("#shortpath").slideToggle();
+            $("#Content").slideToggle();
+        }
+
+        function toggleSelected_env(tag) {
+            $(tag).addClass('selected_env').siblings().removeClass('selected_env');
+            level = parseInt($(tag).parent().parent().parent().attr('id').split("_")[1]);
+
+            manager($(tag).hasClass("selected_env"), $(tag).attr('ci-number'), $(tag).attr('ci-typeid'), level);
+
+            //console.log($('.environment > table > tbody > tr.selected_env').attr("ID"));
+        };
+
+        function toggleSelected(tag) {
+            var pickedCI = $(tag).parent();
+            level = parseInt($(pickedCI).parent().parent().attr('id').split("_")[1]);
+
+            //console.log(selectedCIs[level]);
+            if (typeof selectedCIs[level] != 'undefined') $("#" + selectedCIs[level][0] + "_attr_info").slideUp();
+
+            $(pickedCI).toggleClass('selected').siblings().removeClass("selected").addClass("transperen");
+
+
+
+            if ($(pickedCI).hasClass("selected")) {
+                $("#ADD_CI_LEVEL_" + level).slideUp();
+                $("#" + pickedCI.attr('id') + "_attr_info").slideDown();
+
+                $(pickedCI).removeClass("transperen");
+            } else {
+                $("#ADD_CI_LEVEL_" + level).slideDown();
+                $("#" + pickedCI.attr('id') + "_attr_info").slideUp();
+
+                $(pickedCI).siblings().removeClass("transperen")
+            };
+
+            //console.log("pickedCI is ", pickedCI, " and level is ", level);
+
+
+            manager($(pickedCI).hasClass("selected"), $(pickedCI).attr('ci-number'), $(pickedCI).attr('ci-typeid'), level);
+            
+        };
+
+        function manager(isselected, ci_number, ci_typeid, level) {
+
+            var colsForExecution = hlevel - level;
+            var wait = 100;
+
+            //console.log(hlevel, " ", level, " ", colsForExecution);
+
+            if (level < hlevel) {
+                for (id = hlevel; id >= level + 1; id--) {
+                    $("#Level_" + id).delay(200 * (hlevel - id)).slideUp(500, function() {
+                        $(this).remove();
+                    });
+
+                    //console.log("Removed CI ", selectedCIs[id - 1]);
+
+                    $("#ID" + selectedCIs[id - 1]).delay(200 * (hlevel - id)).slideUp(500, function() {
+                        $(this).remove();
+                    });
+                }
+                hlevel = level;
+                selectedCIs.splice(hlevel, colsForExecution);
+            }
+
+            if (isselected) {
+                ((colsForExecution) == 0) ? wait = 0: wait = 200 * colsForExecution + 510;
+                //console.log("colsForExecution=", colsForExecution, " wait=", wait);
+                setTimeout(function() {
+                    add_col();
+                }, wait);
+            };
+
+            //console.log(selectedCIs);
+
+            function add_col() {
+
+
+                hlevel++;
+
+                var CI = ci_number;
+
+                selectedCIs.push([ci_number, $("#" + CI).attr("data-search-term")]);
+
+                //$("#shortpath").append($("#" + CI).attr("data-search-term") + ">");
+                var path = "";
+
+                if (typeof selectedCIs != 'undefined')
+                    for (var i = 0; i < selectedCIs.length; i++) {
+                        path += " | " + selectedCIs[i][1];
+                    }
+                $("#shortpath").text(path);
+                //console.log(path);
+                
+                GetChildrenOfCI(ci_number, ci_typeid, hlevel);
+
+                return true;
+            };
+
+            (hlevel > 0) ? getInfo(ci_number):'-';
+
+        }
+
+        function GetChildrenOfCI(parent, ci_tipeid = '0', level = 0) {
+            $.ajax({
+                type: 'GET',
+                url: "http://itadmin.ad.btk.bg:82/api/GetSubCIs/"+parent,
+                cache: false,
+                timeout: 30000,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Request: " + XMLHttpRequest.toString() + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
+                },
+                success: function(repo) {
+                    var newCI;
+                    var response = repo.d;
+
+                    //console.log("CI_TipeID of ", parent, " is ", ci_tipeid, " and hlevel is ", hlevel)
+
+
+                    if (level == 0) {
+                        section = 'root_CIs';
+                    } else {
+                        switch (ci_tipeid) {
+                            case '3':
+                            
+                                section = "Level_" + level;
+                                newCI = "<div class='environment' id='Level_" + level + "' style='display: none;'>";
+                                newCI += "<table> <thead> <tr> <th  colspan=3>ENVIRONMENTS</th> </tr> </thead><tbody></tbody>";
+                                newCI += "</table> ";
+                                newCI += "<div class='environment_button Info' onclick='form_new_environment(\"" + parent + "\");' style='width: 63%'>Add new ENV</div>";
+                                newCI += "<div class='environment_button Delete'>Delete ENV</div>"; 
+                                 newCI += "<div id='"+parent+"_addEnv' class=\"CI_Info\" style='display: none;'><h1>Add environment</h1>";
+                                newCI += "<select id='env_ID' onchange='setEnvName(this);'>";
+                                newCI += "  <option value='' disabled selected hidden>Choose Predefined Environment ...</option>";
+                                newCI += "  <option value='Production'>Prodaction</option>";
+                                newCI += "  <option value='PreProduction'>PreProduction</option>";
+                                newCI += "  <option value='IT1'>IT1</option>";
+                                newCI += "  <option value='IT9'>IT9</option>";
+                                newCI += "  <option value='IT8'>IT8</option>";
+                                newCI += "  <option value=''>Not Predefined</option>";
+                                newCI += "</select>";
+                                newCI += "<input id='name_of_env' type=\"text\" multiline placeholder=\"The name of new environment ...\">";
+
+                                newCI+="<div><div class='environment_button Edit' style='width: 62.5%' onclick='add_new_environment(\"" + parent + "\");'>Add</div><div class='environment_button Info last' onClick='$(this).closest(\".CI_Info\").slideUp();'>Cancel</div></div></div>"
+                                $("#" + parent).append(newCI);                                    
+                               
+                                break;
+                            default:
+                                section = "Level_" + level + "_CIs";
+                                newCI = "<div id='Level_" + level + "' class='colomn' style='display: none'><div id='" + section + "' class='CIs'></div></div>";
+
+                                $("#map").append(newCI);
+                        };
+                    };
+
+                    if (repo.length > 0) { 
+                        $.each(repo,function(i,j) {
+                            var child = j.CHILD;
+                            var child_name = j.CHILD_NAME;
+                            var CIType = j.CI_TYPEID;
+                            var newTagID = child_name.replace(/ /g, "_");
+
+                            switch (ci_tipeid) {
+                                case '3':
+                                    newCI = "<tr id='" + child + "'  onclick='toggleSelected_env(this)'><td  colspan=3>" + child_name + "</td></tr>";
+                                    $("#" + section).find('table tbody').append(newCI);
+                                    //console.log(section);
+                                    $('#' + child).attr('data-search-term', child_name);
+                                    $('#' + child).attr('ci-number', child);
+                                    $('#' + child).attr('ci-typeid', CIType);
+                                    break;
+                                case '34':
+                                    newCI = "<div class='CI' id='" + child + "'><div class='CI_name' onclick='toggleSelected(this)'>" + child_name + "</div>";
+                                    newCI += "<div id='" + child + "_attr_info' class='CI_Info'  style='display: none;'><h1>Short Info</h1>"
+                                    newCI += "<div class='info_table'>"
+                                    newCI += "   <div class='row'>"
+                                    newCI += "        <div class='cell1_short_info'>OS</div>"
+                                    newCI += "        <div class='cell2_short_info'>Linux RHEL 7</div>"
+                                    newCI += "    </div>"
+                                    newCI += "    <div class='row'>"
+                                    newCI += "        <div class='cell1_short_info'>IP</div>"
+                                    newCI += "        <div class='cell2_short_info'>10.24.56.34</div>"
+                                    newCI += "    </div>"
+                                    newCI += "    <div class='row'>"
+                                    newCI += "        <div class='cell1_short_info'>DNS</div>"
+                                    newCI += "        <div class='cell2_short_info'>esbprodweb1.ad.btk.bg</div>"
+                                    newCI += "    </div>"
+                                    newCI += "    <div class='row'>"
+                                    newCI += "        <div class='cell1_short_info'>User</div>"
+                                    newCI += "        <div class='cell2_short_info'>appadmin</div>"
+                                    newCI += "    </div>"
+                                    newCI += "    <div class='row'>"
+                                    newCI += "        <div class='cell1_short_info'>Password</div>"
+                                    newCI += "        <div class='cell2_short_info'>123Qweasd</div>"
+                                    newCI += "    </div>"
+                                    newCI += "</div>"
+                                    newCI += "</div>"
+                                    newCI += "</div>";
+                                    $("#" + section).append(newCI);
+                                    $('#' + child).attr('data-search-term', child_name);
+                                    $('#' + child).attr('ci-number', child);
+                                    $('#' + child).attr('ci-typeid', CIType);
+                                    if (level > 0) $('#' + child).addClass('attrib_4');
+                                    break;
+                                case '32':
+                                    newCI = "<div class='CI' id='" + child + "'><div class='CI_name' onclick='toggleSelected(this)'>" + child_name + "</div>";
+                                    newCI += "<div id='" + child + "_attr_info' style='display: none;'><div class='CI_Info'><h1>Info</h1>An application is any program, or group of programs, that is designed for the end user. Applications software (also called end-user programs) include such things as database programs, word processors, Web browsers and spreadsheets.</div>"
+                                    newCI += "<div class='environment_button Info' >More Info</div>";
+                                    newCI += "<div class='environment_button Edit' >Edit CI</div>";
+                                    newCI += "<div class='environment_button Delete'>Delete CI</div>";
+                                    newCI += "</div></div>";
+                                    $("#" + section).append(newCI);
+                                    $('#' + child).attr('data-search-term', child_name);
+                                    $('#' + child).attr('ci-number', child);
+                                    $('#' + child).attr('ci-typeid', CIType);
+                                    if (level > 0) $('#' + child).addClass('attrib_4');
+                                    break;
+                                default:
+                                    newCI = "<div class='CI' id='" + child + "'><div class='CI_name' onclick='toggleSelected(this)'>" + child_name + "</div>";
+                                    newCI += "<div id='" + child + "_attr_info' class='CI_Info' style='display: none;'><h1>Info</h1>An application is any program, or group of programs, that is designed for the end user. Applications software (also called end-user programs) include such things as database programs, word processors, Web browsers and spreadsheets.</div>"
+                                    newCI += "</div>";
+                                    $("#" + section).append(newCI);
+                                    $('#' + child).attr('data-search-term', child_name);
+                                    $('#' + child).attr('ci-number', child);
+                                    $('#' + child).attr('ci-typeid', CIType);
+                                    if (level > 0) $('#' + child).addClass('attrib_4');
+                            }
+
+
+
+                        });
+
+
+
+
+    
+                    };
+                    
+                    // Inject ADD bar
+                    switch (section) {
+                        case 'root_CIs': case 'Level_2':
+                            break;
+                        default:
+                            newCI = "<div id='ADD_CI_LEVEL_" + level + "' onclick='AddMask(" + level + ");' class='addCIbuton'>Add new CI</div>";
+                            $("#" + section).append(newCI);
+                    }                    
+                    $("#Level_" + level).slideDown();
+                },
+                beforeSend: function() {
+                    loading = true;
+                    setTimeout(function() {
+                        if (loading) $("#mask").fadeIn()
+                    }, 500);
+                },
+                complete: function() {
+                    loading = false;
+                    $("#mask").fadeOut()
+                }
+            });
+
+            function newRow(name, value) {
+
+            }
+            return 0;
+        }
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+        function getInfo(CI_No) {
+            $.ajax({
+                type: "GET",
+                url: "http://itadmin.btk.bg:82/api/CIINFO/" + (CI_No.substring(2) - 0), 
+                cache: false,
+                success: function (data) {
+                    // const parsetJSON = JSON.parse(data);
+                    var content = "";
+                    cmdbCI(data, data.name)
+
+                    $("#Content").empty().append(content);
+
+                    function cmdbCI(data, tag) {
+                        content += "<div class='ci_info' id='" + data.name + "'>";
+                        content += "<div class='title_info'>" + data.name + " | " + data.type_id+ " | " + data.ci_type +"</div>";
+                        $.each(data.Attributes, function (i, j) {
+                            content += "<p>" + j.name + " - " + j.value + "</p>";
+                        });
+                        $.each(data.Children, function (i, j) {
+                            cmdbCI(j, data.name)
+                        });
+                        content += "</div>";
+                    }
+                    //$("#"+data.Name).append("<div class='ci'>"+j.name+"</div>")});
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.error);
+                },
+                dataType: "json"
+            });
+
+        }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+        GetChildrenOfCI('CI000154');
+    </script>
+
+    <style>
+        div.ci_info {
+            border: 2px solid #A02;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+        }
+
+        div.title_info {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container" class="container">
+        <div class="map_header" onclick='toggleDiv("map")'>CONFIGURATION ITEMS</div>
+        <div id="shortpath" class="inner" style="display: none;" onclick='toggleDiv("map")'>
+        </div>
+        <div id="map" class="inner">
+
+            <div id="Root_0" class="colomn">
+                <div id="root_CIs" class="CIs"></div>
+            </div>
+        </div>
+        <div id="Content" class="inner"  style="display: none;">
+        </div>
+
+    </div>
+    <footer class="footer" onclick='toggleDiv("map")'>
+        Footer
+    </footer>
+    <div id='mask' style="display: none;">
+        <div id='add_attribute' style="display: none;">
+            <!-- header bar with CLOSE button -->
+            <div id='title_bar'>
+                <div id='win_name'>ADD NEW ATTRIBUTE</div>
+                <div id='close_btn' onclick="$(this).parent().parent().fadeOut('slow', function() {$(this).parent().fadeOut('fast')}); AddNewCI(level);">Close
+                </div>
+            </div>
+            <div id='popup_content' style='
+                            height: 90%;
+                            display:flex;
+                            margin: 0 55px;
+                            '></div>
+        </div>
+        <div data-loader="timer"></div>
+
+    </div>
+
+
+</body>

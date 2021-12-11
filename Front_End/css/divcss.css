@@ -1,0 +1,134 @@
+.info_section_colomn {
+    width: 600px;
+    display: inline-block;
+    vertical-align: top;
+    margin: 5px;
+}
+
+.CI_info_section {
+    margin: 0 0 10px 0;
+    overflow: hidden;
+    color: lightsteelblue;
+    border-radius: 5px;
+    padding: 10px;
+    transition: background-color 0.5s, color 0.5s, opacity 0.5s;
+}
+
+
+/*----*/
+
+[class ^='header'] {
+    padding: 0 10px 0 20px;
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    color: white;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    transition: box-shadow 0.3s;
+    cursor: pointer;
+}
+
+[class ^='header']:hover {
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+}
+
+.header_WS {
+    background-color: darkred;
+}
+
+.header_AS {
+    background-color: rgb(19, 82, 141);
+}
+
+.header_DB {
+    background-color: rgb(109, 143, 17);
+}
+
+.info_header {
+    font-size: 11pt;
+    font-weight: 700;
+    color: dimgray;
+    background-color: #dcdcdc;
+    margin-bottom: 10px;
+    padding: 2px 10px 2px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.info {
+    margin-top: 10px;
+    padding: 10px 10px 0 10px;
+    background-color: #fff;
+    border-radius: 5px;
+    overflow-y: auto;
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+}
+
+.component_info {
+    padding: 0 10px;
+    margin-bottom: 15px;
+    font-size: 10pt;
+    color: dimgray;
+    white-space: normal;
+}
+
+.ci_refnum {
+    float: right;
+    font-weight: normal;
+    font-size: 10pt;
+}
+
+.overview {
+    padding-bottom: 10px;
+}
+
+.component_header {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #733;
+    border-bottom: 1px solid #bbb;
+    margin-bottom: 2px;
+}
+
+.info_table {
+    display: table;
+    /*border-top: #bbb 1px solid;
+        border-bottom: 1px solid #bbb;*/
+}
+
+.row {
+    border-bottom: 1px solid #cccccc66;
+    padding: 2px 0 4px 0;
+    display: flex;
+    float: left;
+}
+
+.cell1,
+.cell2 {
+    float: left;
+}
+
+.cell1 {
+    width: 150px;
+    font-weight: bold;
+    color: #999;
+}
+
+.cell2 {
+    width: 390px;
+    word-wrap: break-word;
+}
+
+.cell1_short_info {
+    width: 70px;
+}
+
+.cell2_short_info {
+    width: 215px;
+    word-wrap: break-word;
+    padding-right: 5px;
+}
+
+.test {
+    text-align: right;
+}

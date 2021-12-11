@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Manage CI Attributes</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gasparesganga-jquery-message-box@3.2.2/dist/messagebox.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="cmdb.css">
+    <link rel="stylesheet" type="text/css" href="mask.css">
+    <link rel="stylesheet" type="text/css" href="divcss.css">
+    <link rel="stylesheet" type="text/css" href="messagebox.css">
+    
+    <script>
+        var hlevel = 0,
+            level = 0,
+            id = 0,
+            exec = 0,
+            count = 0;
+            activeCIID = 0;
+
+        var selectedCIs = [];
+
+        function toggleSelected(tag) {
+            console.log("toggleSelected");
+            var pickedCI = $(tag).parent();
+            level = parseInt($(pickedCI).parent().parent().attr('id').split("_")[1]);
+
+            //console.log(selectedCIs[level]);
+            $("#" + selectedCIs[level] + "_attr_info").slideUp();
+
+            $(pickedCI).toggleClass('selected').siblings().removeClass("selected").addClass("transperen");
+
+
+
+            if ($(pickedCI).hasClass("selected")) {
+                $("#ADD_CI_LEVEL_" + level).slideUp();
+                $("#" + pickedCI.attr('id') + "_attr_info").slideDown();
+
+                $(pickedCI).removeClass("transperen");
+            } else {
+                $("#ADD_CI_LEVEL_" + level).slideDown();
+                $("#" + pickedCI.attr('id') + "_attr_info").slideUp();
+
+                $(pickedCI).siblings().removeClass("transperen")
+            };
+
+            //console.log("pickedCI is ", pickedCI, " and level is ", level);
+
+
+            manager($(pickedCI).hasClass("selected"), $(pickedCI).attr('ci-number'), $(pickedCI).attr('ci-typeid'), level);
+        };
+
+        function manager(isselected, ci_number, ci_typeid, level) {
+            console.log("manager");
+            var colsForExecution = hlevel - level;
+            var wait = 100;
+
+            //console.log(hlevel, " ", level, " ", colsForExecution);
+
+            if (level < hlevel) {
+                for (id = hlevel; id >= level + 1; id--) {
+                    $("#Level_" + id).delay(200 * (hlevel - id)).slideUp(500, function() {
+                        $(this).remove();
+                    });
+
+                    //console.log("Removed CI ", selectedCIs[id - 1]);
+
+                    $("#ID" + selectedCIs[id - 1]).delay(200 * (hlevel - id)).slideUp(500, function() {
+                        $(this).remove();
+                    });
+
+                    activeCIID = selectedCIs[id - 2];
+
+                }
+                hlevel = level;
+                selectedCIs.splice(hlevel, colsForExecution);
+            }
+
+            if (isselected) {
+                ((colsForExecution) == 0) ? wait = 0: wait = 200 * colsForExecution + 510;
+                //console.log("colsForExecution=", colsForExecution, " wait=", wait);
+                setTimeout(function() {
+                    add_col();
+                }, wait);
+            } else console.log(activeCIID);
+
+            
+
+            function add_col() {
+                console.log("add_col");
+
+                hlevel++;
+
+                var CI = ci_number;
+
+                selectedCIs.push(CI);
+
+                $("#atrributes").append("<div id='ID" + CI + "' class='colomn' style='display: none'>" +
+                    "<div id='" + CI + "_Info' class='CIs'></div>" +
+                    "</div>");
+                var newCI = "<div class='CI attrib' ><div class='CI_name' title='Pesho'>" + CI + "</div></div>";
+                $("#" + CI + "_Info").append(newCI);
+                $("#ID" + CI).slideDown();
+                
+                activeCIID = CI;
+                console.log(activeCIID);
+
+                GetChildrenOfCI( ci_number, ci_typeid, hlevel);
+
+
+
+                return true;
+            };
+
+        }
+
+        function GetChildrenOfCI(parent='', ci_tipeid = '0', level = 0) {
+            console.log("GetChildrenOfCI");
+            var loading = false;
+
+            $.ajax({
+                type: 'GET',
+                url: "http://10.10.20.82:82/api/CIAttrConf/" + parent,
+                cache: false,
+                timeout: 30000,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Request: " + XMLHttpRequest.toString() + "\n\nStatus: " + textStatus + "\n\nError: " + errorThrown);
+                },
+                success: function(repo) {
+                    var newCI;
+                    var response = repo.Attributes;
+
+                    //console.log("CI_TipeID of ", parent, " is ", ci_tipeid, " and level/hlevel is ", level, "/", hlevel);
+
+                    if (ci_tipeid == 'SubCI' || level <= 1) {
+                        if (level == 0) {
+                            section = 'root_CIs';
+                        } else {
+                            section = "Level_" + level + "_CIs";
+                            newCI = "<div id='Level_" + level + "' class='colomn' style='display: none'>" +
+                                "<div id='" + section + "' class='CIs'></div>" +
+                                "</div>";
+                            $("#inner").append(newCI);
+                        };
+
+                        if (response.length > 0)
+                            $.each(response, function (i,j) {
+                                AddCI(j, level);
+                            });
+                            
+                        newCI = "<div id='ADD_CI_LEVEL_" + level + "' onclick='AddMask(" + level + ","+repo.Root_ID+");' class='addCIbuton'>Add new Attribute</div>";
+                        $("#" + section).append(newCI);
+
+
+                        $("#Level_" + level).slideDown();
+                        level += 1;
+                    };
+                },
+                beforeSend: function() {
+                    loading = true;
+                    setTimeout(function() {
+                        if (loading) $("#mask").fadeIn()
+                    }, 500);
+                },
+                complete: function() {
+                    loading = false;
+                    $("#mask").fadeOut()
+                }
+            });
+            return 0;
+        }
+
+
+        function AddCI(response1, level) {
+            console.log("AddCI");
+            var child = ((level==0)?"RT":"CI") + response1.Attribute_ID;
+            var child_name = response1.Name;
+            var CIType = response1.Type;
+            var newTagID = child_name.replace(/ /g, "_");
+
+            newCI = "<div id='" + child + "'><div class='CI_name' onclick='toggleSelected(this);'>" + child_name + "</div>";
+            if (level > 0) {
+                newCI += "<div class='" + ((response1.Active) ? "properties" : "properties_no_active") + "'>ACT</div>";
+                newCI += "<div class='" + ((response1.Mandatory) ? "properties" : "properties_no_active") + "'>MAN</div>";
+                newCI += "<div class='" + ((response1.Multiple) ? "properties" : "properties_no_active") + "'>MUL</div>";
+                newCI += "<div class='properties_frame " + response1.Type + "'>" + response1.Type + "</div>";
+                newCI += "<div id='" + child + "_attr_info' style='display:none;'>";
+                newCI += "<div class='CI_Info'><h1>Short description</h1>" + response1.Info + "</div>";
+                newCI += "<div class='CI_Info'><h1>CI configuration</h1>";
+                newCI += "<div class='info_table'>";
+                newCI += "    <div class='row'>";
+                newCI += "        <div class='cell1_short_info'>Property ID</div>";
+                newCI += "        <div class='cell2_short_info'>" + response1.Attribute_ID + "</div>";
+                newCI += "    </div>";
+                newCI += "    <div class='row'>";
+                newCI += "        <div class='cell1_short_info'>Property type</div>";
+                newCI += "        <div class='cell2_short_info' style='width: 50px;'>" + response1.Type + "</div>";
+                newCI += "        <div class='cell2_short_info' style='width: 25px;  text-align: end;'>" + response1.SubCI_ID + "</div>";
+                newCI += "        <div class='cell2_short_info' style='width: 130px;'>" + capitalizeFirstLetter(response1.SubCI_Name) + "</div>";
+                newCI += "    </div>";
+                newCI += "   <div class='row'>";
+                newCI += "        <div class='cell1_short_info'>Active</div>";
+                newCI += "        <div class='cell2_short_info'>" + ((response1.Active) ?  "Yes" : "No") + "</div>";
+                newCI += "    </div>";
+                newCI += "    <div class='row'>";
+                newCI += "        <div class='cell1_short_info'>Mandatory</div>";
+                newCI += "        <div class='cell2_short_info'>" + ((response1.Mandatory) ? "Yes" : "No") + "</div>";
+                newCI += "    </div>";
+                newCI += "    <div class='row'>";
+                newCI += "        <div class='cell1_short_info'>Multypale</div>";
+                newCI += "        <div class='cell2_short_info'>" + ((response1.Multiple) ? "Yes" : "No") + "</div>";
+                newCI += "    </div>";
+                newCI += "</div></div>";
+                newCI += "<div class='environment_button Edit' style='width: 60%;'>Edit CI</div>";
+                newCI += "<div class='environment_button Delete' style='width: 32%;'>Delete CI</div>";
+                newCI += "</div>";
+            }
+            else {
+                newCI += "<div style='font-size:0.85em; padding-top: 5px;'>Base CI " + response1.Attribute_ID + "</div>";
+                newCI += "<div id='" + child + "_attr_info' style='display:none;'>";
+                newCI += "<div class='CI_Info'><h1>Short description</h1>" + response1.Info + "</div>";
+                newCI += "</div>";               
+            }
+            newCI += "</div>"
+            $("#" + section).append(newCI);
+            $('#' + child).attr('data-search-term', child_name.toLowerCase());
+            $('#' + child).attr('ci-number', child);
+            $('#' + child).attr('ci-typeid', CIType);
+
+            switch (CIType) {
+                case 'Attribute':
+                    $('#' + child).addClass('attrib_1');
+                    break;
+                case 'Ref ID':
+                    $('#' + child).addClass('attrib_2');
+                    break;
+                case 'SubCI':
+                    $('#' + child).addClass('attrib_3');
+                    break;
+                case 'MAIN Rel':
+                    $('#' + child).addClass('attrib_21');
+                    break;
+                default:
+                    $('#' + child).addClass('CI');
+            }
+
+            $("#" + child).fadeIn();
+        }
+
+        function AddNewCI(level) {
+            console.log("AddNewCI");
+            $("#ADD_CI_LEVEL_" + (level)).remove();
+
+            var CIType = ["attribute", "REF ID", "SubCI"];
+
+            var NewCI = new CI("TEST" + Math.floor(Math.random() * 10000) + 1, "New Test CI", CIType[Math.floor(Math.random() * 3)], 1, 0, 0);
+            //console.log('AddCI to level ', level);
+            AddCI(NewCI, level);
+
+            newCI = "<div id='ADD_CI_LEVEL_" + (level) + "' onclick='AddMask(" + level + ");' class='addCIbuton'>Add new Attribute</div>";
+            $("#" + section).append(newCI);
+            //console.log('AddNewCI.section', section);
+        }
+
+
+        function AddMask(level_val) {
+            console.log("AddMask");
+            $("#mask").fadeIn("fast", function() {
+                $("#add_attribute").fadeIn("slow")
+            });
+            level = level_val;
+            section = "Level_" + level + "_CIs";
+        }
+
+        function wipe(element) {
+            console.log("wipe");
+
+            var CI_Name = $(element).parent().parent().parent().attr('data-search-term').toUpperCase();
+
+            $.MessageBox({
+                buttonDone: "Yes",
+                buttonFail: "No",
+                message: 'Are you sure you want to delete the ' + CI_Name + ' item?'
+            }).done(function() {
+                level = parseInt($(element).parent().parent().parent().parent().attr('id').split("_")[1]);
+                manager(0, 0, 0, level);
+                $($(element).parent().parent().parent()).slideUp().siblings().removeClass("transperen");
+                $("#ADD_CI_LEVEL_" + level).slideDown();
+                //console.log(parseInt($(element).parent().parent().parent().parent().attr('id').split("_")[1]));
+            });
+
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
+        GetChildrenOfCI();
+
+        class CI {
+            constructor(ID, Name, Type, Active, Mandatory, Multiple) {
+                this.Attribute_ID = ID;
+                this.Name = Name;
+                this.Type = Type;
+                this.Active = Active;
+                this.Mandatory = Mandatory;
+                this.Multiple = Multiple;
+                this.Info = 'N/A';
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div id="container" class="container">
+        <div id="inner" class="inner">
+            <div id="Root_0" class="colomn">
+                <div id="root_CIs" class="CIs"></div>
+            </div>
+        </div>
+    </div>
+    <div id="atrributes" class="container">
+    </div>
+    <footer class="footer">
+        Footer
+    </footer>
+
+
+    <div id='mask' style="display: none;">
+        <div id='add_attribute' style="display: none;">
+            <!-- header bar with CLOSE button -->
+            <div id='title_bar'>
+                <div id='win_name'>ADD NEW ATTRIBUTE</div>
+                <div id='close_btn' onclick="$(this).parent().parent().fadeOut('slow', function() {$(this).parent().fadeOut('fast')}); AddNewCI(level);">Close
+                </div>
+            </div>
+            <div id='popup_content' style='
+                            height: 90%;
+                            display:flex;
+                            margin: 0 55px;
+                            '></div>
+        </div>
+        <div data-loader="timer"></div>
+
+    </div>
+
+</body>
