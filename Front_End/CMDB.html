@@ -4,13 +4,13 @@
 <head>
     <meta charset="utf-8">
     <title>CMDB UI</title>
-    
-    <link rel="stylesheet" type="text/css" href="cmdb.css">
-    <link rel="stylesheet" type="text/css" href="divcss.css">
-    <link rel="stylesheet" type="text/css" href="mask.css">
+
+    <link rel="stylesheet" type="text/css" href="./css/cmdb.css">
+    <link rel="stylesheet" type="text/css" href="./css/divcss.css">
+    <link rel="stylesheet" type="text/css" href="./css/mask.css">
 
     <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-    <script src="environment.js"></script>
+    <script src="./javascript/environment.js"></script>
     <script>
         var hlevel = 0,
             level = 0,
@@ -81,7 +81,7 @@
 
 
             manager($(pickedCI).hasClass("selected"), $(pickedCI).attr('ci-number'), $(pickedCI).attr('ci-typeid'), level);
-            
+
         };
 
         function manager(isselected, ci_number, ci_typeid, level) {
@@ -135,20 +135,20 @@
                     }
                 $("#shortpath").text(path);
                 //console.log(path);
-                
+
                 GetChildrenOfCI(ci_number, ci_typeid, hlevel);
 
                 return true;
             };
 
-            (hlevel > 0) ? getInfo(ci_number):'-';
+            (hlevel > 0) ? getInfo(ci_number): '-';
 
         }
 
         function GetChildrenOfCI(parent, ci_tipeid = '0', level = 0) {
             $.ajax({
                 type: 'GET',
-                url: "http://itadmin.ad.btk.bg:82/api/GetSubCIs/"+parent,
+                url: "http://itadmin.ad.btk.bg:82/api/GetSubCIs/" + parent,
                 cache: false,
                 timeout: 30000,
                 contentType: 'application/json; charset=utf-8',
@@ -169,14 +169,14 @@
                     } else {
                         switch (ci_tipeid) {
                             case '3':
-                            
+
                                 section = "Level_" + level;
                                 newCI = "<div class='environment' id='Level_" + level + "' style='display: none;'>";
                                 newCI += "<table> <thead> <tr> <th  colspan=3>ENVIRONMENTS</th> </tr> </thead><tbody></tbody>";
                                 newCI += "</table> ";
                                 newCI += "<div class='environment_button Info' onclick='form_new_environment(\"" + parent + "\");' style='width: 63%'>Add new ENV</div>";
-                                newCI += "<div class='environment_button Delete'>Delete ENV</div>"; 
-                                 newCI += "<div id='"+parent+"_addEnv' class=\"CI_Info\" style='display: none;'><h1>Add environment</h1>";
+                                newCI += "<div class='environment_button Delete'>Delete ENV</div>";
+                                newCI += "<div id='" + parent + "_addEnv' class=\"CI_Info\" style='display: none;'><h1>Add environment</h1>";
                                 newCI += "<select id='env_ID' onchange='setEnvName(this);'>";
                                 newCI += "  <option value='' disabled selected hidden>Choose Predefined Environment ...</option>";
                                 newCI += "  <option value='Production'>Prodaction</option>";
@@ -188,9 +188,9 @@
                                 newCI += "</select>";
                                 newCI += "<input id='name_of_env' type=\"text\" multiline placeholder=\"The name of new environment ...\">";
 
-                                newCI+="<div><div class='environment_button Edit' style='width: 62.5%' onclick='add_new_environment(\"" + parent + "\");'>Add</div><div class='environment_button Info last' onClick='$(this).closest(\".CI_Info\").slideUp();'>Cancel</div></div></div>"
-                                $("#" + parent).append(newCI);                                    
-                               
+                                newCI += "<div><div class='environment_button Edit' style='width: 62.5%' onclick='add_new_environment(\"" + parent + "\");'>Add</div><div class='environment_button Info last' onClick='$(this).closest(\".CI_Info\").slideUp();'>Cancel</div></div></div>"
+                                $("#" + parent).append(newCI);
+
                                 break;
                             default:
                                 section = "Level_" + level + "_CIs";
@@ -200,8 +200,8 @@
                         };
                     };
 
-                    if (repo.length > 0) { 
-                        $.each(repo,function(i,j) {
+                    if (repo.length > 0) {
+                        $.each(repo, function(i, j) {
                             var child = j.CHILD;
                             var child_name = j.CHILD_NAME;
                             var CIType = j.CI_TYPEID;
@@ -280,17 +280,18 @@
 
 
 
-    
+
                     };
-                    
+
                     // Inject ADD bar
                     switch (section) {
-                        case 'root_CIs': case 'Level_2':
+                        case 'root_CIs':
+                        case 'Level_2':
                             break;
                         default:
                             newCI = "<div id='ADD_CI_LEVEL_" + level + "' onclick='AddMask(" + level + ");' class='addCIbuton'>Add new CI</div>";
                             $("#" + section).append(newCI);
-                    }                    
+                    }
                     $("#Level_" + level).slideDown();
                 },
                 beforeSend: function() {
@@ -310,13 +311,13 @@
             }
             return 0;
         }
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------------------------------------------------------------------
         function getInfo(CI_No) {
             $.ajax({
                 type: "GET",
-                url: "http://itadmin.btk.bg:82/api/CIINFO/" + (CI_No.substring(2) - 0), 
+                url: "http://itadmin.btk.bg:82/api/CIINFO/" + (CI_No.substring(2) - 0),
                 cache: false,
-                success: function (data) {
+                success: function(data) {
                     // const parsetJSON = JSON.parse(data);
                     var content = "";
                     cmdbCI(data, data.name)
@@ -325,25 +326,25 @@
 
                     function cmdbCI(data, tag) {
                         content += "<div class='ci_info' id='" + data.name + "'>";
-                        content += "<div class='title_info'>" + data.name + " | " + data.type_id+ " | " + data.ci_type +"</div>";
-                        $.each(data.Attributes, function (i, j) {
+                        content += "<div class='title_info'>" + data.name + " | " + data.type_id + " | " + data.ci_type + "</div>";
+                        $.each(data.Attributes, function(i, j) {
                             content += "<p>" + j.name + " - " + j.value + "</p>";
                         });
-                        $.each(data.Children, function (i, j) {
+                        $.each(data.Children, function(i, j) {
                             cmdbCI(j, data.name)
                         });
                         content += "</div>";
                     }
                     //$("#"+data.Name).append("<div class='ci'>"+j.name+"</div>")});
                 },
-                error: function (jqXHR, textStatus, errorThrown) {
+                error: function(jqXHR, textStatus, errorThrown) {
                     alert(jqXHR.error);
                 },
                 dataType: "json"
             });
 
         }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------------------
         GetChildrenOfCI('CI000154');
     </script>
 
@@ -354,7 +355,7 @@
             padding: 10px;
             margin: 10px;
         }
-
+        
         div.title_info {
             font-size: 1.2em;
             font-weight: bold;
@@ -373,7 +374,7 @@
                 <div id="root_CIs" class="CIs"></div>
             </div>
         </div>
-        <div id="Content" class="inner"  style="display: none;">
+        <div id="Content" class="inner" style="display: none;">
         </div>
 
     </div>
